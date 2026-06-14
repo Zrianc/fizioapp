@@ -6,7 +6,7 @@
   <title>NeMo · Manualna terapija</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
 </head>
 <body>
 
@@ -14,7 +14,14 @@
   <div id="loginScreen" class="login-screen">
     <div class="login-card">
       <div class="login-logo">
-        <span class="logo-icon">🤲</span>
+        <div class="login-logo-mark">
+          <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="7" r="4" fill="white"/>
+            <path d="M12 16 Q16 12 20 14 Q24 12 28 16 L26 26 L22 24 L22 32 L18 32 L18 24 L14 26 Z" fill="white"/>
+            <path d="M14 26 L10 34" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M26 26 L30 34" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
         <h1><span>Ne</span>Mo</h1>
         <p>Manualna terapija · Varaždin</p>
       </div>
@@ -34,16 +41,23 @@
   <!-- APP -->
   <div id="appScreen" class="app-screen" style="display:none;">
 
-    <!-- HEADER -->
     <header class="app-header">
       <div class="header-inner">
         <div class="header-logo">
-          <div class="header-logo-icon">🤲</div>
-          <div class="header-title"><span class="header-title-main"><span>Ne</span>Mo</span><span class="header-title-sub">Manualna terapija</span></div>
+          <div class="header-logo-icon">
+            <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="7" r="4" fill="white"/>
+              <path d="M12 16 Q16 12 20 14 Q24 12 28 16 L26 26 L22 24 L22 32 L18 32 L18 24 L14 26 Z" fill="white"/>
+              <path d="M14 26 L10 34" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M26 26 L30 34" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="header-title">
+            <span class="header-title-main"><span>Ne</span>Mo</span>
+            <span class="header-title-sub">Manualna terapija</span>
+          </div>
         </div>
-        <nav class="header-nav" id="headerNav">
-          <!-- filled by JS -->
-        </nav>
+        <nav class="header-nav" id="headerNav"></nav>
         <div class="header-user">
           <span id="headerUserName" class="user-name"></span>
           <button class="btn btn-ghost btn-sm" id="logoutBtn">Odjava</button>
@@ -51,31 +65,28 @@
       </div>
     </header>
 
-    <!-- MAIN -->
     <main class="app-main">
-
-      <!-- FIZIOTERAPEUT VIEWS -->
 
       <!-- Pacijenti -->
       <section class="view" id="view-pacijenti">
         <div class="view-header">
-          <h2>👥 Pacijenti</h2>
-          <button class="btn btn-primary" id="addPacijentBtn">➕ Novi pacijent</button>
+          <h2>Pacijenti</h2>
+          <button class="btn btn-primary" id="addPacijentBtn">+ Novi pacijent</button>
         </div>
         <div class="search-bar">
-          <input type="text" id="pacijentSearch" class="form-input" placeholder="🔍 Pretraži pacijente..." />
+          <input type="text" id="pacijentSearch" class="form-input" placeholder="Pretraži pacijente..." />
         </div>
         <div id="pacijentiList" class="cards-grid"></div>
       </section>
 
-      <!-- Vježbe biblioteka -->
+      <!-- Vježbe -->
       <section class="view" id="view-vjezbe">
         <div class="view-header">
-          <h2>📚 Biblioteka vježbi</h2>
-          <button class="btn btn-primary" id="addVjezbaBtn">➕ Nova vježba</button>
+          <h2>Biblioteka vježbi</h2>
+          <button class="btn btn-primary" id="addVjezbaBtn">+ Nova vježba</button>
         </div>
         <div class="search-bar">
-          <input type="text" id="vjezbaSearch" class="form-input" placeholder="🔍 Pretraži vježbe..." />
+          <input type="text" id="vjezbaSearch" class="form-input" placeholder="Pretraži vježbe..." />
         </div>
         <div id="vjezbeList" class="cards-grid"></div>
       </section>
@@ -83,16 +94,16 @@
       <!-- Planovi -->
       <section class="view" id="view-planovi">
         <div class="view-header">
-          <h2>📋 Planovi vježbanja</h2>
-          <button class="btn btn-primary" id="addPlanBtn">➕ Novi plan</button>
+          <h2>Planovi vježbanja</h2>
+          <button class="btn btn-primary" id="addPlanBtn">+ Novi plan</button>
         </div>
         <div id="planoviList" class="cards-grid"></div>
       </section>
 
-      <!-- PACIJENT VIEW -->
+      <!-- Moj plan (pacijent) -->
       <section class="view" id="view-moj-plan">
         <div class="view-header">
-          <h2>💪 Moje vježbe</h2>
+          <h2>Moje vježbe</h2>
         </div>
         <div id="mojPlanContent"></div>
       </section>
@@ -100,14 +111,12 @@
     </main>
   </div>
 
-  <!-- MODALI -->
-
-  <!-- Modal: Novi pacijent -->
+  <!-- MODAL: Novi pacijent -->
   <div class="modal-overlay" id="modalPacijent">
     <div class="modal-box">
       <div class="modal-header">
         <h3 id="modalPacijentTitle">Novi pacijent</h3>
-        <button class="modal-close" onclick="closeModal('modalPacijent')">✕</button>
+        <button class="modal-close" onclick="closeModal('modalPacijent')">&#10005;</button>
       </div>
       <div class="form-group">
         <label>Ime i prezime</label>
@@ -132,12 +141,12 @@
     </div>
   </div>
 
-  <!-- Modal: Nova vježba -->
+  <!-- MODAL: Nova vježba -->
   <div class="modal-overlay" id="modalVjezba">
     <div class="modal-box">
       <div class="modal-header">
         <h3 id="modalVjezbaTitle">Nova vježba</h3>
-        <button class="modal-close" onclick="closeModal('modalVjezba')">✕</button>
+        <button class="modal-close" onclick="closeModal('modalVjezba')">&#10005;</button>
       </div>
       <div class="form-group">
         <label>Naziv vježbe</label>
@@ -186,16 +195,16 @@
     </div>
   </div>
 
-  <!-- Modal: Novi plan -->
+  <!-- MODAL: Novi plan -->
   <div class="modal-overlay" id="modalPlan">
     <div class="modal-box modal-wide">
       <div class="modal-header">
         <h3 id="modalPlanTitle">Novi plan vježbanja</h3>
-        <button class="modal-close" onclick="closeModal('modalPlan')">✕</button>
+        <button class="modal-close" onclick="closeModal('modalPlan')">&#10005;</button>
       </div>
       <div class="form-group">
         <label>Naziv plana</label>
-        <input type="text" id="planNaziv" class="form-input" placeholder="npr. Plan rehabilitacije kuka - Tjedan 1" />
+        <input type="text" id="planNaziv" class="form-input" placeholder="npr. Rehabilitacija kuka — Tjedan 1" />
       </div>
       <div class="form-group">
         <label>Pacijent</label>
@@ -208,7 +217,7 @@
       <div class="plan-vjezbe-section">
         <div class="plan-vjezbe-header">
           <h4>Vježbe u planu</h4>
-          <button class="btn btn-secondary btn-sm" id="dodajVjezbuPlanBtn">➕ Dodaj vježbu</button>
+          <button class="btn btn-secondary btn-sm" id="dodajVjezbuPlanBtn">+ Dodaj vježbu</button>
         </div>
         <div id="planVjezbeList"></div>
       </div>
@@ -219,12 +228,12 @@
     </div>
   </div>
 
-  <!-- Modal: Video player -->
+  <!-- MODAL: Video -->
   <div class="modal-overlay" id="modalVideo">
     <div class="modal-box modal-video">
       <div class="modal-header">
         <h3 id="modalVideoTitle">Video vježbe</h3>
-        <button class="modal-close" id="closeVideoBtn">✕</button>
+        <button class="modal-close" id="closeVideoBtn">&#10005;</button>
       </div>
       <div class="video-container">
         <iframe id="videoIframe" src="" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
@@ -232,20 +241,18 @@
     </div>
   </div>
 
-  <!-- Modal: Detalji pacijenta -->
+  <!-- MODAL: Detalji pacijenta -->
   <div class="modal-overlay" id="modalPacijentDetalji">
     <div class="modal-box modal-wide">
       <div class="modal-header">
         <h3 id="pacijentDetaljiNaslov"></h3>
-        <button class="modal-close" onclick="closeModal('modalPacijentDetalji')">✕</button>
+        <button class="modal-close" onclick="closeModal('modalPacijentDetalji')">&#10005;</button>
       </div>
       <div id="pacijentDetaljiContent"></div>
     </div>
   </div>
 
   <div class="toast" id="toast"></div>
-
-  <!-- Firebase -->
   <script type="module" src="app.js"></script>
 </body>
 </html>

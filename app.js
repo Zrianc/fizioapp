@@ -100,9 +100,9 @@ function showApp(role) {
   const nav = document.getElementById('headerNav');
   if (role === 'fizioterapeut') {
     nav.innerHTML = `
-      <button class="nav-tab active" data-view="pacijenti">👥 Pacijenti</button>
-      <button class="nav-tab" data-view="vjezbe">📚 Vježbe</button>
-      <button class="nav-tab" data-view="planovi">📋 Planovi</button>
+      <button class="nav-tab active" data-view="pacijenti">Pacijenti</button>
+      <button class="nav-tab" data-view="vjezbe">Vježbe</button>
+      <button class="nav-tab" data-view="planovi">Planovi</button>
     `;
     nav.querySelectorAll('.nav-tab').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -114,7 +114,7 @@ function showApp(role) {
     showView('pacijenti');
     loadPacijenti();
   } else {
-    nav.innerHTML = `<button class="nav-tab active" data-view="moj-plan">💪 Moje vježbe</button>`;
+    nav.innerHTML = `<button class="nav-tab active" data-view="moj-plan">Moje vježbe</button>`;
     showView('moj-plan');
     loadMojPlan();
   }
@@ -153,8 +153,8 @@ function renderPacijenti(lista) {
       <div class="pacijent-email">${escHtml(p.email)}</div>
       ${p.napomena ? `<div class="pacijent-napomena">${escHtml(p.napomena)}</div>` : ''}
       <div class="pacijent-actions" onclick="event.stopPropagation()">
-        <button class="btn btn-secondary btn-sm" onclick="openPacijentDetalji('${p.id}')">📋 Planovi</button>
-        <button class="btn btn-danger btn-sm" onclick="deletePacijent('${p.id}')">🗑️</button>
+        <button class="btn btn-secondary btn-sm" onclick="openPacijentDetalji('${p.id}')">Planovi</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePacijent('${p.id}')">Obriši</button>
       </div>
     </div>
   `).join('');
@@ -242,7 +242,7 @@ window.openPacijentDetalji = async function(pacijentId) {
         ${p.napomena ? `<div class="detalji-row"><span class="detalji-label">Napomena:</span><span>${escHtml(p.napomena)}</span></div>` : ''}
       </div>
       <div class="planovi-pacijenta">
-        <h4>📋 Planovi vježbanja (${planovi.length})</h4>
+        <h4>Planovi vježbanja (${planovi.length})</h4>
         ${planovi.length === 0
           ? '<p style="color:var(--text-dim);font-size:.85rem;">Nema dodijeljenih planova.</p>'
           : planovi.map(plan => `
@@ -252,12 +252,12 @@ window.openPacijentDetalji = async function(pacijentId) {
                 <div class="plan-mini-count">${plan.vjezbe?.length || 0} vježbi</div>
               </div>
               <div style="display:flex;gap:6px;">
-                <button class="btn btn-secondary btn-sm" onclick="closeModal('modalPacijentDetalji'); editPlan('${plan.id}')">✏️</button>
-                <button class="btn btn-danger btn-sm" onclick="deletePlan('${plan.id}')">🗑️</button>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal('modalPacijentDetalji'); editPlan('${plan.id}')">Uredi</button>
+                <button class="btn btn-danger btn-sm" onclick="deletePlan('${plan.id}')">Obriši</button>
               </div>
             </div>`).join('')
         }
-        <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="closeModal('modalPacijentDetalji'); openNoviPlanZaPacijenta('${pacijentId}')">➕ Dodaj plan</button>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="closeModal('modalPacijentDetalji'); openNoviPlanZaPacijenta('${pacijentId}')">Dodaj plan</button>
       </div>
     `;
   } catch(e) {
@@ -305,9 +305,9 @@ function renderVjezbe(lista) {
         ${v.video ? `<span class="meta-chip">🎥 Video</span>` : ''}
       </div>
       <div class="vjezba-actions">
-        ${v.video ? `<button class="btn btn-secondary btn-sm" onclick="playVideo('${escHtml(v.video)}', '${escHtml(v.naziv)}')">▶️ Video</button>` : ''}
-        <button class="btn btn-secondary btn-sm" onclick="editVjezba('${v.id}')">✏️ Uredi</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteVjezba('${v.id}')">🗑️</button>
+        ${v.video ? `<button class="btn btn-secondary btn-sm" onclick="playVideo('${escHtml(v.video)}', '${escHtml(v.naziv)}')">Video</button>` : ''}
+        <button class="btn btn-secondary btn-sm" onclick="editVjezba('${v.id}')">Uredi</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteVjezba('${v.id}')">Obriši</button>
       </div>
     </div>
   `).join('');
@@ -408,11 +408,11 @@ function renderPlanovi(lista) {
     return `
       <div class="plan-card">
         <div class="plan-name">${escHtml(plan.naziv)}</div>
-        <div class="plan-pacijent">👤 ${p ? escHtml(p.ime) : 'Nepoznat pacijent'}</div>
-        <div class="plan-count">💪 ${plan.vjezbe?.length || 0} vježbi</div>
+        <div class="plan-pacijent">${p ? escHtml(p.ime) : 'Nepoznat pacijent'}</div>
+        <div class="plan-count">${plan.vjezbe?.length || 0} vježbi</div>
         <div class="plan-actions">
-          <button class="btn btn-secondary btn-sm" onclick="editPlan('${plan.id}')">✏️ Uredi</button>
-          <button class="btn btn-danger btn-sm" onclick="deletePlan('${plan.id}')">🗑️ Obriši</button>
+          <button class="btn btn-secondary btn-sm" onclick="editPlan('${plan.id}')">Uredi</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePlan('${plan.id}')">Obriši</button>
         </div>
       </div>
     `;
@@ -591,7 +591,7 @@ async function loadMojPlan() {
                 <span class="meta-chip">🔄 ${v.serije} serije</span>
                 <span class="meta-chip">✕ ${v.ponavljanja} ponavljanja</span>
                 ${v.trajanje > 0 ? `<span class="meta-chip">⏱ ${v.trajanje}s</span>` : ''}
-                ${v.video ? `<button class="btn btn-primary btn-sm" onclick="playVideo('${escHtml(v.video)}', '${escHtml(v.naziv)}')">▶️ Pogledaj video</button>` : ''}
+                ${v.video ? `<button class="btn btn-primary btn-sm" onclick="playVideo('${escHtml(v.video)}', '${escHtml(v.naziv)}')">Pogledaj video</button>` : ''}
               </div>
             </div>`;
         }).join('')}
