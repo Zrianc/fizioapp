@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FizioApp</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="logo-icon">🏃</span>
+        <h1>FizioApp</h1>
+        <p>Sustav za fizioterapeutske vježbe</p>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" class="form-input" placeholder="vas@email.com" />
+      </div>
+      <div class="form-group">
+        <label>Lozinka</label>
+        <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" />
+      </div>
+      <button class="btn btn-primary btn-full" id="loginBtn">Prijava</button>
+      <p class="login-error" id="loginError"></p>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="appScreen" class="app-screen" style="display:none;">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-logo">
+          <span>🏃</span>
+          <span class="header-title">FizioApp</span>
+        </div>
+        <nav class="header-nav" id="headerNav">
+          <!-- filled by JS -->
+        </nav>
+        <div class="header-user">
+          <span id="headerUserName" class="user-name"></span>
+          <button class="btn btn-ghost btn-sm" id="logoutBtn">Odjava</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="app-main">
+
+      <!-- FIZIOTERAPEUT VIEWS -->
+
+      <!-- Pacijenti -->
+      <section class="view" id="view-pacijenti">
+        <div class="view-header">
+          <h2>👥 Pacijenti</h2>
+          <button class="btn btn-primary" id="addPacijentBtn">➕ Novi pacijent</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="pacijentSearch" class="form-input" placeholder="🔍 Pretraži pacijente..." />
+        </div>
+        <div id="pacijentiList" class="cards-grid"></div>
+      </section>
+
+      <!-- Vježbe biblioteka -->
+      <section class="view" id="view-vjezbe">
+        <div class="view-header">
+          <h2>📚 Biblioteka vježbi</h2>
+          <button class="btn btn-primary" id="addVjezbaBtn">➕ Nova vježba</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="vjezbaSearch" class="form-input" placeholder="🔍 Pretraži vježbe..." />
+        </div>
+        <div id="vjezbeList" class="cards-grid"></div>
+      </section>
+
+      <!-- Planovi -->
+      <section class="view" id="view-planovi">
+        <div class="view-header">
+          <h2>📋 Planovi vježbanja</h2>
+          <button class="btn btn-primary" id="addPlanBtn">➕ Novi plan</button>
+        </div>
+        <div id="planoviList" class="cards-grid"></div>
+      </section>
+
+      <!-- PACIJENT VIEW -->
+      <section class="view" id="view-moj-plan">
+        <div class="view-header">
+          <h2>💪 Moje vježbe</h2>
+        </div>
+        <div id="mojPlanContent"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODALI -->
+
+  <!-- Modal: Novi pacijent -->
+  <div class="modal-overlay" id="modalPacijent">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalPacijentTitle">Novi pacijent</h3>
+        <button class="modal-close" onclick="closeModal('modalPacijent')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Ime i prezime</label>
+        <input type="text" id="pacijentIme" class="form-input" placeholder="npr. Ivan Horvat" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="pacijentEmail" class="form-input" placeholder="pacijent@email.com" />
+      </div>
+      <div class="form-group">
+        <label>Lozinka</label>
+        <input type="password" id="pacijentLozinka" class="form-input" placeholder="Minimalno 6 znakova" />
+      </div>
+      <div class="form-group">
+        <label>Dijagnoza / Napomena</label>
+        <textarea id="pacijentNapomena" class="form-input" rows="3" placeholder="npr. Bol u donjem dijelu leđa..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="savePacijentBtn">Spremi</button>
+        <button class="btn btn-ghost" onclick="closeModal('modalPacijent')">Odustani</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Nova vježba -->
+  <div class="modal-overlay" id="modalVjezba">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalVjezbaTitle">Nova vježba</h3>
+        <button class="modal-close" onclick="closeModal('modalVjezba')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Naziv vježbe</label>
+        <input type="text" id="vjezbaName" class="form-input" placeholder="npr. Istezanje kvadricepsa" />
+      </div>
+      <div class="form-group">
+        <label>Opis / Upute</label>
+        <textarea id="vjezbaOpis" class="form-input" rows="4" placeholder="Detaljne upute za izvođenje..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>YouTube / Vimeo URL</label>
+        <input type="url" id="vjezbaVideo" class="form-input" placeholder="https://youtube.com/watch?v=..." />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Serije</label>
+          <input type="number" id="vjezbaSerije" class="form-input" value="3" min="1" max="20" />
+        </div>
+        <div class="form-group">
+          <label>Ponavljanja</label>
+          <input type="number" id="vjezbaPonavlja" class="form-input" value="10" min="1" max="100" />
+        </div>
+        <div class="form-group">
+          <label>Trajanje (sek)</label>
+          <input type="number" id="vjezbaTraje" class="form-input" value="0" min="0" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Kategorija</label>
+        <select id="vjezbaKategorija" class="form-input">
+          <option value="ledja">Leđa</option>
+          <option value="ramena">Ramena</option>
+          <option value="noge">Noge</option>
+          <option value="kuk">Kuk</option>
+          <option value="koljeno">Koljeno</option>
+          <option value="stopalo">Stopalo i gležanj</option>
+          <option value="vrat">Vrat</option>
+          <option value="core">Core / Trbuh</option>
+          <option value="opce">Opće</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="saveVjezbaBtn">Spremi</button>
+        <button class="btn btn-ghost" onclick="closeModal('modalVjezba')">Odustani</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Novi plan -->
+  <div class="modal-overlay" id="modalPlan">
+    <div class="modal-box modal-wide">
+      <div class="modal-header">
+        <h3 id="modalPlanTitle">Novi plan vježbanja</h3>
+        <button class="modal-close" onclick="closeModal('modalPlan')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Naziv plana</label>
+        <input type="text" id="planNaziv" class="form-input" placeholder="npr. Plan rehabilitacije kuka - Tjedan 1" />
+      </div>
+      <div class="form-group">
+        <label>Pacijent</label>
+        <select id="planPacijent" class="form-input"></select>
+      </div>
+      <div class="form-group">
+        <label>Napomena za pacijenta</label>
+        <textarea id="planNapomena" class="form-input" rows="2" placeholder="Posebne upute..."></textarea>
+      </div>
+      <div class="plan-vjezbe-section">
+        <div class="plan-vjezbe-header">
+          <h4>Vježbe u planu</h4>
+          <button class="btn btn-secondary btn-sm" id="dodajVjezbuPlanBtn">➕ Dodaj vježbu</button>
+        </div>
+        <div id="planVjezbeList"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="savePlanBtn">Spremi plan</button>
+        <button class="btn btn-ghost" onclick="closeModal('modalPlan')">Odustani</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Video player -->
+  <div class="modal-overlay" id="modalVideo">
+    <div class="modal-box modal-video">
+      <div class="modal-header">
+        <h3 id="modalVideoTitle">Video vježbe</h3>
+        <button class="modal-close" id="closeVideoBtn">✕</button>
+      </div>
+      <div class="video-container">
+        <iframe id="videoIframe" src="" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Detalji pacijenta -->
+  <div class="modal-overlay" id="modalPacijentDetalji">
+    <div class="modal-box modal-wide">
+      <div class="modal-header">
+        <h3 id="pacijentDetaljiNaslov"></h3>
+        <button class="modal-close" onclick="closeModal('modalPacijentDetalji')">✕</button>
+      </div>
+      <div id="pacijentDetaljiContent"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Firebase -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
