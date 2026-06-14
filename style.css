@@ -81,11 +81,10 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 72px; height: 72px;
-  background: var(--teal);
-  border-radius: 16px;
+  width: 120px; height: 80px;
   margin-bottom: 20px;
-  box-shadow: 0 8px 24px rgba(0,168,157,0.3);
+  border-radius: 12px;
+  overflow: hidden;
 }
 .login-logo-mark svg {
   width: 40px; height: 40px;
@@ -142,13 +141,12 @@ body {
   flex-shrink: 0;
 }
 .header-logo-icon {
-  width: 40px; height: 40px;
-  background: var(--teal);
-  border-radius: 10px;
+  width: 48px; height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,168,157,0.3);
+  flex-shrink: 0;
 }
-.header-logo-icon svg { width: 22px; height: 22px; fill: white; }
 .header-title { display: flex; flex-direction: column; line-height: 1.1; }
 .header-title-main {
   font-size: 1rem;
