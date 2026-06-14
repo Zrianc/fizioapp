@@ -228,34 +228,41 @@ window.openPacijentDetalji = async function(pacijentId) {
   if (!p) return;
 
   document.getElementById('pacijentDetaljiNaslov').textContent = p.ime;
-
-  // Učitaj planove za ovog pacijenta
-  const q = query(collection(db, 'planovi'), where('pacijentId', '==', pacijentId));
-  const snap = await getDocs(q);
-  const planovi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-  document.getElementById('pacijentDetaljiContent').innerHTML = `
-    <div class="pacijent-detalji-info">
-      <div class="detalji-row"><span class="detalji-label">Email:</span><span>${escHtml(p.email)}</span></div>
-      ${p.napomena ? `<div class="detalji-row"><span class="detalji-label">Napomena:</span><span>${escHtml(p.napomena)}</span></div>` : ''}
-    </div>
-    <div class="planovi-pacijenta">
-      <h4>📋 Planovi vježbanja (${planovi.length})</h4>
-      ${planovi.length === 0
-        ? '<p style="color:var(--text-dim);font-size:.85rem;">Nema dodijeljenih planova.</p>'
-        : planovi.map(plan => `
-          <div class="plan-mini">
-            <div>
-              <div class="plan-mini-name">${escHtml(plan.naziv)}</div>
-              <div class="plan-mini-count">${plan.vjezbe?.length || 0} vježbi</div>
-            </div>
-            <button class="btn btn-danger btn-sm" onclick="deletePlan('${plan.id}')">🗑️</button>
-          </div>`).join('')
-      }
-      <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="closeModal('modalPacijentDetalji'); openNoviPlanZaPacijenta('${pacijentId}')">➕ Dodaj plan</button>
-    </div>
-  `;
+  document.getElementById('pacijentDetaljiContent').innerHTML = '<p style="color:var(--text-dim);">⏳ Učitavanje...</p>';
   openModal('modalPacijentDetalji');
+
+  try {
+    const q = query(collection(db, 'planovi'), where('pacijentId', '==', pacijentId));
+    const snap = await getDocs(q);
+    const planovi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    document.getElementById('pacijentDetaljiContent').innerHTML = `
+      <div class="pacijent-detalji-info">
+        <div class="detalji-row"><span class="detalji-label">Email:</span><span>${escHtml(p.email)}</span></div>
+        ${p.napomena ? `<div class="detalji-row"><span class="detalji-label">Napomena:</span><span>${escHtml(p.napomena)}</span></div>` : ''}
+      </div>
+      <div class="planovi-pacijenta">
+        <h4>📋 Planovi vježbanja (${planovi.length})</h4>
+        ${planovi.length === 0
+          ? '<p style="color:var(--text-dim);font-size:.85rem;">Nema dodijeljenih planova.</p>'
+          : planovi.map(plan => `
+            <div class="plan-mini">
+              <div>
+                <div class="plan-mini-name">${escHtml(plan.naziv)}</div>
+                <div class="plan-mini-count">${plan.vjezbe?.length || 0} vježbi</div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-secondary btn-sm" onclick="closeModal('modalPacijentDetalji'); editPlan('${plan.id}')">✏️</button>
+                <button class="btn btn-danger btn-sm" onclick="deletePlan('${plan.id}')">🗑️</button>
+              </div>
+            </div>`).join('')
+        }
+        <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="closeModal('modalPacijentDetalji'); openNoviPlanZaPacijenta('${pacijentId}')">➕ Dodaj plan</button>
+      </div>
+    `;
+  } catch(e) {
+    document.getElementById('pacijentDetaljiContent').innerHTML = `<p style="color:var(--danger);">Greška: ${e.message}</p>`;
+  }
 }
 
 window.openNoviPlanZaPacijenta = function(pacijentId) {
@@ -388,6 +395,8 @@ async function loadPlanovi() {
   } catch(e) { showToast('Greška pri učitavanju planova', 'error'); }
 }
 
+let editingPlanId = null;
+
 function renderPlanovi(lista) {
   const container = document.getElementById('planoviList');
   if (lista.length === 0) {
@@ -402,6 +411,7 @@ function renderPlanovi(lista) {
         <div class="plan-pacijent">👤 ${p ? escHtml(p.ime) : 'Nepoznat pacijent'}</div>
         <div class="plan-count">💪 ${plan.vjezbe?.length || 0} vježbi</div>
         <div class="plan-actions">
+          <button class="btn btn-secondary btn-sm" onclick="editPlan('${plan.id}')">✏️ Uredi</button>
           <button class="btn btn-danger btn-sm" onclick="deletePlan('${plan.id}')">🗑️ Obriši</button>
         </div>
       </div>
@@ -411,23 +421,43 @@ function renderPlanovi(lista) {
 
 document.getElementById('addPlanBtn').addEventListener('click', () => openNoviPlan(null));
 
-function openNoviPlan(pacijentId = null) {
-  planVjezbeIds = [];
-  document.getElementById('modalPlanTitle').textContent = 'Novi plan vježbanja';
-  document.getElementById('planNaziv').value = '';
-  document.getElementById('planNapomena').value = '';
+window.editPlan = async function(planId) {
+  const snap = await getDoc(doc(db, 'planovi', planId));
+  if (!snap.exists()) return;
+  const plan = { id: planId, ...snap.data() };
+  openNoviPlan(plan.pacijentId, plan);
+}
+
+function openNoviPlan(pacijentId = null, existingPlan = null) {
+  editingPlanId = existingPlan ? existingPlan.id : null;
+  planVjezbeIds = existingPlan ? [...(existingPlan.vjezbe || [])] : [];
+
+  document.getElementById('modalPlanTitle').textContent = existingPlan ? 'Uredi plan' : 'Novi plan vježbanja';
+  document.getElementById('planNaziv').value = existingPlan?.naziv || '';
+  document.getElementById('planNapomena').value = existingPlan?.napomena || '';
 
   // Popuni pacijente
   const sel = document.getElementById('planPacijent');
   sel.innerHTML = allPacijenti.map(p =>
-    `<option value="${p.id}" ${p.id === pacijentId ? 'selected' : ''}>${escHtml(p.ime)}</option>`
+    `<option value="${p.id}" ${p.id === (pacijentId || existingPlan?.pacijentId) ? 'selected' : ''}>${escHtml(p.ime)}</option>`
   ).join('');
   if (allPacijenti.length === 0) {
     sel.innerHTML = '<option value="">Nema pacijenata</option>';
   }
 
-  renderPlanVjezbe();
+  // Učitaj vježbe ako nisu učitane
+  if (allVjezbe.length === 0) {
+    loadVjezbeForPlan().then(() => renderPlanVjezbe());
+  } else {
+    renderPlanVjezbe();
+  }
   openModal('modalPlan');
+}
+
+async function loadVjezbeForPlan() {
+  const q = query(collection(db, 'vjezbe'), where('fizioterapeutId', '==', currentUser.uid));
+  const snap = await getDocs(q);
+  allVjezbe = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
 function renderPlanVjezbe() {
@@ -486,15 +516,23 @@ document.getElementById('savePlanBtn').addEventListener('click', async () => {
   if (planVjezbeIds.length === 0) { showToast('Dodajte barem jednu vježbu', 'error'); return; }
 
   try {
-    await addDoc(collection(db, 'planovi'), {
-      naziv, pacijentId, napomena,
-      vjezbe: planVjezbeIds,
-      fizioterapeutId: currentUser.uid,
-      kreiran: new Date().toISOString()
-    });
+    if (editingPlanId) {
+      await updateDoc(doc(db, 'planovi', editingPlanId), {
+        naziv, pacijentId, napomena, vjezbe: planVjezbeIds
+      });
+      showToast('Plan ažuriran!', 'success');
+    } else {
+      await addDoc(collection(db, 'planovi'), {
+        naziv, pacijentId, napomena,
+        vjezbe: planVjezbeIds,
+        fizioterapeutId: currentUser.uid,
+        kreiran: new Date().toISOString()
+      });
+      showToast('Plan kreiran!', 'success');
+    }
     closeModal('modalPlan');
+    editingPlanId = null;
     await loadPlanovi();
-    showToast('Plan kreiran!', 'success');
   } catch(e) { showToast('Greška: ' + e.message, 'error'); }
 });
 
