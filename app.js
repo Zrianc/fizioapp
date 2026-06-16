@@ -475,9 +475,6 @@ document.getElementById('addVjezbaBtn')?.addEventListener('click', () => {
   editingVjezbaId = null;
   document.getElementById('modalVjezbaTitle').textContent = 'Nova vježba';
   ['vjezbaName','vjezbaOpis','vjezbaVideo'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('vjezbaSerije').value = '3';
-  document.getElementById('vjezbaPonavlja').value = '10';
-  document.getElementById('vjezbaTraje').value = '0';
   document.getElementById('vjezbaKategorija').value = 'opce';
   openModal('modalVjezba');
 });
@@ -490,9 +487,6 @@ window.editVjezba = function(id) {
   document.getElementById('vjezbaName').value = v.naziv || '';
   document.getElementById('vjezbaOpis').value = v.opis || '';
   document.getElementById('vjezbaVideo').value = v.video || '';
-  document.getElementById('vjezbaSerije').value = v.serije || 3;
-  document.getElementById('vjezbaPonavlja').value = v.ponavljanja || 10;
-  document.getElementById('vjezbaTraje').value = v.trajanje || 0;
   document.getElementById('vjezbaKategorija').value = v.kategorija || 'opce';
   openModal('modalVjezba');
 }
@@ -501,12 +495,9 @@ document.getElementById('saveVjezbaBtn')?.addEventListener('click', async () => 
   const naziv = document.getElementById('vjezbaName').value.trim();
   const opis = document.getElementById('vjezbaOpis').value.trim();
   const video = document.getElementById('vjezbaVideo').value.trim();
-  const serije = parseInt(document.getElementById('vjezbaSerije').value) || 3;
-  const ponavljanja = parseInt(document.getElementById('vjezbaPonavlja').value) || 10;
-  const trajanje = parseInt(document.getElementById('vjezbaTraje').value) || 0;
   const kategorija = document.getElementById('vjezbaKategorija').value;
   if (!naziv) { showToast('Unesite naziv vježbe', 'error'); return; }
-  const data = { naziv, opis, video, serije, ponavljanja, trajanje, kategorija, fizioterapeutId: currentUser.uid };
+  const data = { naziv, opis, video, kategorija, fizioterapeutId: currentUser.uid };
   try {
     if (editingVjezbaId) {
       await updateDoc(doc(db, 'vjezbe', editingVjezbaId), data);
@@ -614,18 +605,25 @@ function renderPlanVjezbe() {
 document.getElementById('dodajVjezbuPlanBtn')?.addEventListener('click', () => {
   if (allVjezbe.length === 0) { showToast('Nema vježbi u biblioteci', 'error'); return; }
   const opts = allVjezbe.map(v => `<option value="${v.id}">${escHtml(v.naziv)}</option>`).join('');
-  const sel = document.createElement('select');
-  sel.className = 'form-input';
-  sel.style.marginTop = '8px';
-  sel.innerHTML = `<option value="">-- odaberi vježbu --</option>${opts}`;
-  sel.addEventListener('change', () => {
-    if (sel.value) { planVjezbeIds.push(sel.value); renderPlanVjezbe(); sel.remove(); }
-  });
-  document.getElementById('planVjezbeList').appendChild(sel);
-  sel.focus();
+  const container = document.getElementById('planVjezbeList');
+  const row = document.createElement('div');
+  row.style.cssText = 'background:var(--teal-lighter);border:1px solid rgba(0,168,157,0.2);border-radius:6px;padding:10px;margin-bottom:6px;';
+  row.innerHTML = `
+    <select class="form-input plan-vjezba-sel" style="margin-bottom:6px;"><option value="">-- odaberi vježbu --</option>${opts}</select>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+      <div><label style="font-size:.7rem;color:var(--grey-mid);font-weight:600;text-transform:uppercase;">Serije</label>
+        <input type="number" class="form-input plan-vjezba-serije" value="3" min="1" /></div>
+      <div><label style="font-size:.7rem;color:var(--grey-mid);font-weight:600;text-transform:uppercase;">Ponavljanja</label>
+        <input type="number" class="form-input plan-vjezba-ponavlja" value="10" min="1" /></div>
+      <div><label style="font-size:.7rem;color:var(--grey-mid);font-weight:600;text-transform:uppercase;">Trajanje (sek)</label>
+        <input type="number" class="form-input plan-vjezba-trajanje" value="0" min="0" /></div>
+    </div>
+    <button class="btn btn-danger btn-sm" style="margin-top:6px;" onclick="this.parentElement.remove(); updatePlanVjezbeIds()">Ukloni</button>
+  `;
+  container.appendChild(row);
 });
 
-window.removePlanVjezba = function(idx) { planVjezbeIds.splice(idx, 1); renderPlanVjezbe(); }
+window.updatePlanVjezbeIds = function() {} // placeholder
 
 document.getElementById('savePlanBtn')?.addEventListener('click', async () => {
   const naziv = document.getElementById('planNaziv').value.trim();
@@ -633,14 +631,30 @@ document.getElementById('savePlanBtn')?.addEventListener('click', async () => {
   const napomena = document.getElementById('planNapomena').value.trim();
   if (!naziv) { showToast('Unesite naziv plana', 'error'); return; }
   if (!pacijentId) { showToast('Odaberite pacijenta', 'error'); return; }
-  if (planVjezbeIds.length === 0) { showToast('Dodajte barem jednu vježbu', 'error'); return; }
+
+  // Skupi vježbe s njihovim serijama/ponavljanjima
+  const rows = document.getElementById('planVjezbeList').querySelectorAll('.plan-vjezba-sel');
+  if (rows.length === 0) { showToast('Dodajte barem jednu vježbu', 'error'); return; }
+
+  const vjezbe = [];
+  for (const sel of rows) {
+    if (!sel.value) { showToast('Odaberite vježbu u svim redovima', 'error'); return; }
+    const row = sel.parentElement;
+    vjezbe.push({
+      vjezbaId: sel.value,
+      serije: parseInt(row.querySelector('.plan-vjezba-serije').value) || 3,
+      ponavljanja: parseInt(row.querySelector('.plan-vjezba-ponavlja').value) || 10,
+      trajanje: parseInt(row.querySelector('.plan-vjezba-trajanje').value) || 0
+    });
+  }
+
   try {
     if (editingPlanId) {
-      await updateDoc(doc(db, 'planovi', editingPlanId), { naziv, pacijentId, napomena, vjezbe: planVjezbeIds });
+      await updateDoc(doc(db, 'planovi', editingPlanId), { naziv, pacijentId, napomena, vjezbe });
       showToast('Plan ažuriran!', 'success');
     } else {
       await addDoc(collection(db, 'planovi'), {
-        naziv, pacijentId, napomena, vjezbe: planVjezbeIds,
+        naziv, pacijentId, napomena, vjezbe,
         fizioterapeutId: currentUser.uid,
         kreiran: new Date().toISOString()
       });
@@ -672,9 +686,10 @@ async function loadMojPlan() {
       container.innerHTML = `<div class="moj-plan-empty"><div class="icon"><svg viewBox="0 0 24 24"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg></div><p>Vaš fizioterapeut još nije dodijelio plan vježbanja.</p></div>`;
       return;
     }
-    const sveVjezbeIds = [...new Set(planovi.flatMap(p => p.vjezbe || []))];
+    const sveVjezbeIds = [...new Set(planovi.flatMap(p => (p.vjezbe || []).map(v => v.vjezbaId || v)))];
     const vjezbeMap = {};
     for (const vid of sveVjezbeIds) {
+      if (!vid) continue;
       const vSnap = await getDoc(doc(db, 'vjezbe', vid));
       if (vSnap.exists()) vjezbeMap[vid] = { id: vid, ...vSnap.data() };
     }
@@ -692,9 +707,13 @@ async function loadMojPlan() {
         <div class="plan-section">
           <div class="plan-section-title">${escHtml(plan.naziv)}</div>
           ${plan.napomena ? `<div class="plan-napomena-box">${escHtml(plan.napomena)}</div>` : ''}
-          ${(plan.vjezbe || []).map((vid, idx) => {
+          ${(plan.vjezbe || []).map((item, idx) => {
+            const vid = item.vjezbaId || item;
             const v = vjezbeMap[vid];
             if (!v) return '';
+            const serije = item.serije || '—';
+            const ponavljanja = item.ponavljanja || '—';
+            const trajanje = item.trajanje || 0;
             return `
               <div class="vjezba-pacijent-card">
                 <div class="vjezba-pacijent-header">
@@ -703,9 +722,9 @@ async function loadMojPlan() {
                 </div>
                 ${v.opis ? `<div class="vjezba-pacijent-opis">${escHtml(v.opis)}</div>` : ''}
                 <div class="vjezba-pacijent-meta">
-                  <span class="meta-chip">${v.serije} serije</span>
-                  <span class="meta-chip">${v.ponavljanja} ponavljanja</span>
-                  ${v.trajanje > 0 ? `<span class="meta-chip">${v.trajanje}s</span>` : ''}
+                  <span class="meta-chip">${serije} serije</span>
+                  <span class="meta-chip">${ponavljanja} ponavljanja</span>
+                  ${trajanje > 0 ? `<span class="meta-chip">${trajanje}s</span>` : ''}
                   ${v.video ? `<button class="btn btn-primary btn-sm" onclick="playVideo('${escHtml(v.video)}', '${escHtml(v.naziv)}')">Pogledaj video</button>` : ''}
                 </div>
               </div>`;
