@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NeMo · Manualna terapija</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
 </head>
 <body>
@@ -17,8 +16,7 @@
         <div class="login-logo-mark">
           <img src="logo.png" alt="NeMo Logo" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
         </div>
-        <h1><span>Ne</span>Mo</h1>
-        <p>Manualna terapija · Varaždin</p>
+        <p>Prijavite se za nastavak</p>
       </div>
       <div class="form-group">
         <label>Email</label>
@@ -35,12 +33,11 @@
 
   <!-- APP -->
   <div id="appScreen" class="app-screen" style="display:none;">
-
     <header class="app-header">
       <div class="header-inner">
         <div class="header-logo">
           <div class="header-logo-icon">
-            <img src="logo.png" alt="NeMo" style="width:100%;height:100%;object-fit:contain;border-radius:8px;" />
+            <img src="logo.png" alt="NeMo" style="width:100%;height:100%;object-fit:contain;border-radius:6px;" />
           </div>
           <div class="header-title">
             <span class="header-title-main"><span>Ne</span>Mo</span>
@@ -57,16 +54,37 @@
 
     <main class="app-main">
 
-      <!-- Pacijenti -->
+      <!-- SUPER-ADMIN: Fizioterapeuti -->
+      <section class="view" id="view-fizioterapeuti-admin">
+        <div class="view-header">
+          <h2>Fizioterapeuti</h2>
+          <button class="btn btn-primary" id="addFizioterapeutBtn">+ Novi fizioterapeut</button>
+        </div>
+        <div id="fizioterapeutiList" class="cards-grid"></div>
+      </section>
+
+      <!-- SUPER-ADMIN: Svi pacijenti -->
+      <section class="view" id="view-pacijenti-admin">
+        <div class="view-header">
+          <h2>Svi pacijenti</h2>
+        </div>
+        <div id="sviPacijentiList" class="cards-grid"></div>
+      </section>
+
+      <!-- FIZIOTERAPEUT: Pacijenti -->
       <section class="view" id="view-pacijenti">
         <div class="view-header">
           <h2>Pacijenti</h2>
           <button class="btn btn-primary" id="addPacijentBtn">+ Novi pacijent</button>
         </div>
-        <div class="search-bar">
-          <input type="text" id="pacijentSearch" class="form-input" placeholder="Pretraži pacijente..." />
+        <div class="toolbar">
+          <input type="text" id="pacijentSearch" class="form-input" placeholder="Pretraži pacijente..." style="max-width:300px;" />
+          <div class="filter-btns">
+            <button class="btn btn-secondary btn-sm active" id="filterSvi">Svi pacijenti</button>
+            <button class="btn btn-secondary btn-sm" id="filterMoji">Moji pacijenti</button>
+          </div>
         </div>
-        <div id="pacijentiList" class="cards-grid"></div>
+        <div id="pacijentiList" class="cards-grid" style="margin-top:16px;"></div>
       </section>
 
       <!-- Vježbe -->
@@ -90,15 +108,43 @@
         <div id="planoviList" class="cards-grid"></div>
       </section>
 
-      <!-- Moj plan (pacijent) -->
+      <!-- Pacijent: Moj plan -->
       <section class="view" id="view-moj-plan">
-        <div class="view-header">
-          <h2>Moje vježbe</h2>
-        </div>
+        <div class="view-header"><h2>Moje vježbe</h2></div>
         <div id="mojPlanContent"></div>
       </section>
 
     </main>
+  </div>
+
+  <!-- MODAL: Novi fizioterapeut -->
+  <div class="modal-overlay" id="modalFizioterapeut">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Novi fizioterapeut</h3>
+        <button class="modal-close" onclick="closeModal('modalFizioterapeut')">&#10005;</button>
+      </div>
+      <div class="form-group">
+        <label>Ime i prezime</label>
+        <input type="text" id="fizioterapeutIme" class="form-input" placeholder="npr. Neven Golubar" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="fizioterapeutEmail" class="form-input" placeholder="fizioterapeut@email.com" />
+      </div>
+      <div class="form-group">
+        <label>Lozinka</label>
+        <input type="password" id="fizioterapeutLozinka" class="form-input" placeholder="Minimalno 6 znakova" />
+      </div>
+      <div class="form-group">
+        <label>Specijalizacija</label>
+        <input type="text" id="fizioterapeutSpecijalizacija" class="form-input" placeholder="npr. Sportska fizioterapija" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="saveFizioterapeutBtn">Spremi</button>
+        <button class="btn btn-ghost" onclick="closeModal('modalFizioterapeut')">Odustani</button>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL: Novi pacijent -->
@@ -153,11 +199,11 @@
       <div class="form-row">
         <div class="form-group">
           <label>Serije</label>
-          <input type="number" id="vjezbaSerije" class="form-input" value="3" min="1" max="20" />
+          <input type="number" id="vjezbaSerije" class="form-input" value="3" min="1" />
         </div>
         <div class="form-group">
           <label>Ponavljanja</label>
-          <input type="number" id="vjezbaPonavlja" class="form-input" value="10" min="1" max="100" />
+          <input type="number" id="vjezbaPonavlja" class="form-input" value="10" min="1" />
         </div>
         <div class="form-group">
           <label>Trajanje (sek)</label>
@@ -226,7 +272,7 @@
         <button class="modal-close" id="closeVideoBtn">&#10005;</button>
       </div>
       <div class="video-container">
-        <iframe id="videoIframe" src="" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+        <iframe id="videoIframe" src="" frameborder="0" allowfullscreen></iframe>
       </div>
     </div>
   </div>
