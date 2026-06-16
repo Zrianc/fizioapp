@@ -111,6 +111,7 @@
       <!-- Pacijent: Moj plan -->
       <section class="view" id="view-moj-plan">
         <div class="view-header"><h2>Moje vježbe</h2></div>
+        <div id="kalendarWrap" style="margin-bottom:24px;"></div>
         <div id="mojPlanContent"></div>
       </section>
 
@@ -235,6 +236,28 @@
       <div class="form-group">
         <label>Napomena za pacijenta</label>
         <textarea id="planNapomena" class="form-input" rows="2" placeholder="Posebne upute..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Datum početka</label>
+          <input type="date" id="planDatumPocetka" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>Datum završetka</label>
+          <input type="date" id="planDatumZavrsetka" class="form-input" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Učestalost vježbanja</label>
+        <div class="frequency-picker" id="frequencyPicker">
+          <label class="freq-opt"><input type="checkbox" value="1" /> Pon</label>
+          <label class="freq-opt"><input type="checkbox" value="2" /> Uto</label>
+          <label class="freq-opt"><input type="checkbox" value="3" /> Sri</label>
+          <label class="freq-opt"><input type="checkbox" value="4" /> Čet</label>
+          <label class="freq-opt"><input type="checkbox" value="5" /> Pet</label>
+          <label class="freq-opt"><input type="checkbox" value="6" /> Sub</label>
+          <label class="freq-opt"><input type="checkbox" value="0" /> Ned</label>
+        </div>
       </div>
       <div class="plan-vjezbe-section">
         <div class="plan-vjezbe-header">

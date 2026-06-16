@@ -629,10 +629,18 @@ document.getElementById('savePlanBtn')?.addEventListener('click', async () => {
   const naziv = document.getElementById('planNaziv').value.trim();
   const pacijentId = document.getElementById('planPacijent').value;
   const napomena = document.getElementById('planNapomena').value.trim();
+  const datumPocetka = document.getElementById('planDatumPocetka').value;
+  const datumZavrsetka = document.getElementById('planDatumZavrsetka').value;
+
+  // Učestalost — koji dani u tjednu
+  const daniTjedna = [];
+  document.querySelectorAll('#frequencyPicker input:checked').forEach(cb => {
+    daniTjedna.push(parseInt(cb.value));
+  });
+
   if (!naziv) { showToast('Unesite naziv plana', 'error'); return; }
   if (!pacijentId) { showToast('Odaberite pacijenta', 'error'); return; }
 
-  // Skupi vježbe s njihovim serijama/ponavljanjima
   const rows = document.getElementById('planVjezbeList').querySelectorAll('.plan-vjezba-sel');
   if (rows.length === 0) { showToast('Dodajte barem jednu vježbu', 'error'); return; }
 
@@ -649,15 +657,12 @@ document.getElementById('savePlanBtn')?.addEventListener('click', async () => {
   }
 
   try {
+    const data = { naziv, pacijentId, napomena, vjezbe, daniTjedna, datumPocetka, datumZavrsetka, fizioterapeutId: currentUser.uid };
     if (editingPlanId) {
-      await updateDoc(doc(db, 'planovi', editingPlanId), { naziv, pacijentId, napomena, vjezbe });
+      await updateDoc(doc(db, 'planovi', editingPlanId), data);
       showToast('Plan ažuriran!', 'success');
     } else {
-      await addDoc(collection(db, 'planovi'), {
-        naziv, pacijentId, napomena, vjezbe,
-        fizioterapeutId: currentUser.uid,
-        kreiran: new Date().toISOString()
-      });
+      await addDoc(collection(db, 'planovi'), { ...data, kreiran: new Date().toISOString() });
       showToast('Plan kreiran!', 'success');
     }
     closeModal('modalPlan');
@@ -684,8 +689,12 @@ async function loadMojPlan() {
     const planovi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     if (planovi.length === 0) {
       container.innerHTML = `<div class="moj-plan-empty"><div class="icon"><svg viewBox="0 0 24 24"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg></div><p>Vaš fizioterapeut još nije dodijelio plan vježbanja.</p></div>`;
+      document.getElementById('kalendarWrap').innerHTML = '';
       return;
     }
+
+    // Prikaži kalendar
+    renderKalendar(planovi);
     const sveVjezbeIds = [...new Set(planovi.flatMap(p => (p.vjezbe || []).map(v => v.vjezbaId || v)))];
     const vjezbeMap = {};
     for (const vid of sveVjezbeIds) {
@@ -733,6 +742,105 @@ async function loadMojPlan() {
   } catch(e) {
     container.innerHTML = `<p style="color:var(--danger);">Greška: ${e.message}</p>`;
   }
+}
+
+// ===== KALENDAR =====
+let kalendarMjesec = new Date().getMonth();
+let kalendarGodina = new Date().getFullYear();
+
+function renderKalendar(planovi) {
+  const wrap = document.getElementById('kalendarWrap');
+  if (!wrap) return;
+
+  // Skupi sve dane vježbanja iz svih planova
+  const vjezbanjiDani = new Set();
+  const danas = new Date();
+  danas.setHours(0,0,0,0);
+
+  planovi.forEach(plan => {
+    if (!plan.daniTjedna || plan.daniTjedna.length === 0) return;
+    const pocetak = plan.datumPocetka ? new Date(plan.datumPocetka) : null;
+    const kraj = plan.datumZavrsetka ? new Date(plan.datumZavrsetka) : null;
+
+    // Prođi kroz sve dane u prikazanom mjesecu
+    const daysInMonth = new Date(kalendarGodina, kalendarMjesec + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const datum = new Date(kalendarGodina, kalendarMjesec, d);
+      const danTjedna = datum.getDay(); // 0=ned, 1=pon...
+
+      if (plan.daniTjedna.includes(danTjedna)) {
+        if (pocetak && datum < pocetak) continue;
+        if (kraj && datum > kraj) continue;
+        vjezbanjiDani.add(d);
+      }
+    }
+  });
+
+  const naziviMjeseci = ['Siječanj','Veljača','Ožujak','Travanj','Svibanj','Lipanj',
+    'Srpanj','Kolovoz','Rujan','Listopada','Studeni','Prosinac'];
+  const prvaDana = new Date(kalendarGodina, kalendarMjesec, 1).getDay();
+  const pomaknuti = prvaDana === 0 ? 6 : prvaDana - 1; // Pon=0
+  const daysInMonth = new Date(kalendarGodina, kalendarMjesec + 1, 0).getDate();
+
+  let daniHtml = '';
+  // Prazne ćelije na početku
+  for (let i = 0; i < pomaknuti; i++) {
+    daniHtml += `<div class="kalendar-day empty"></div>`;
+  }
+  // Dani
+  for (let d = 1; d <= daysInMonth; d++) {
+    const datum = new Date(kalendarGodina, kalendarMjesec, d);
+    datum.setHours(0,0,0,0);
+    const jeVjezba = vjezbanjiDani.has(d);
+    const jeDanas = datum.getTime() === danas.getTime();
+    const jeProsli = datum < danas;
+
+    let cls = 'kalendar-day';
+    if (jeVjezba) cls += ' vjezba-dan';
+    else cls += ' slobodan-dan';
+    if (jeDanas) cls += ' today';
+    if (jeProsli && !jeDanas) cls += ' prosli';
+
+    daniHtml += `<div class="${cls}" title="${jeVjezba ? 'Dan vježbanja' : 'Slobodan dan'}">${d}</div>`;
+  }
+
+  wrap.innerHTML = `
+    <div class="kalendar-wrap">
+      <div class="kalendar-header">
+        <div class="kalendar-title">${naziviMjeseci[kalendarMjesec]} ${kalendarGodina}</div>
+        <div class="kalendar-nav">
+          <button class="btn btn-ghost btn-sm" id="kalPrev">&#8592;</button>
+          <button class="btn btn-ghost btn-sm" id="kalNext">&#8594;</button>
+        </div>
+      </div>
+      <div class="kalendar-grid">
+        <div class="kalendar-day-header">Pon</div>
+        <div class="kalendar-day-header">Uto</div>
+        <div class="kalendar-day-header">Sri</div>
+        <div class="kalendar-day-header">Čet</div>
+        <div class="kalendar-day-header">Pet</div>
+        <div class="kalendar-day-header">Sub</div>
+        <div class="kalendar-day-header">Ned</div>
+        ${daniHtml}
+      </div>
+      <div class="kalendar-legenda">
+        <div class="legenda-item"><div class="legenda-boja" style="background:var(--teal);"></div> Dan vježbanja</div>
+        <div class="legenda-item"><div class="legenda-boja" style="background:var(--grey-bg);border:1px solid var(--border);"></div> Slobodan dan</div>
+        <div class="legenda-item"><div class="legenda-boja" style="border:2px solid var(--teal);"></div> Danas</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('kalPrev')?.addEventListener('click', () => {
+    kalendarMjesec--;
+    if (kalendarMjesec < 0) { kalendarMjesec = 11; kalendarGodina--; }
+    renderKalendar(planovi);
+  });
+  document.getElementById('kalNext')?.addEventListener('click', () => {
+    kalendarMjesec++;
+    if (kalendarMjesec > 11) { kalendarMjesec = 0; kalendarGodina++; }
+    renderKalendar(planovi);
+  });
 }
 
 // ===== VIDEO =====
